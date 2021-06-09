@@ -15,6 +15,9 @@ const { aocResetDaily } = require("../commands/misc/aocleaderboard")
 const { imposterDailyReminder } = require("../commands/fun/imposter")
 const TextToSpeech = require("./TextToSpeech")
 const StocksPortfolio = require("./StocksPortfolio")
+const { DateTime } = require("luxon")
+const { refreshToken, postmasterCheck: checkPostmaster } = require("./DestinyRoute")
+const { toNumber } = require("lodash")
 
 module.exports = class LucilleClient extends CommandoClient {
   constructor (options) {
@@ -28,6 +31,7 @@ module.exports = class LucilleClient extends CommandoClient {
     this.stocksPortfolio = new StocksPortfolio()
 
     this.createMessageInterceptor()
+    this.createDestinyTracker()
     this.createDailyTracker()
     this.createTTS()
 
@@ -56,6 +60,23 @@ module.exports = class LucilleClient extends CommandoClient {
       aocResetDaily(guild)
       imposterDailyReminder(this, guild)
     }))
+  }
+
+  createDestinyTracker () {
+    this.setInterval(async () => {
+      const allStates = this.db.getAllBungieStates()
+
+      // First check if we're close to expiring (Resets every 60minutes so we will refresh every 45)
+      allStates.filter(x => {
+        const nextRefresh = toNumber(x.NextRefresh) - 900000
+        const now = DateTime.now().toMillis()
+
+        return nextRefresh < now
+      }).forEach(async (x) => await refreshToken(this, x.State))
+
+      // Now check postmaster
+      allStates.forEach(async (x) => await checkPostmaster(this, x.State))
+    }, 5000) // 5 minutes
   }
 
   createTTS () {

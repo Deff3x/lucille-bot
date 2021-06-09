@@ -1,5 +1,6 @@
 const SQLite = require("better-sqlite3")
 const CalendarDb = require("../db/CalendarDb")
+const DestinyDb = require("../db/DestinyDb")
 const AliasTracker = require("./AliasTracker")
 const BangaTracker = require("./BangaTracker")
 const StocksPortfolio = require("./StocksPortfolio")
@@ -103,6 +104,7 @@ class MasterDatabase {
     this.initVoiceStats()
     this.initStocks()
     this.initCalendarDb()
+    this.initDestinyDb()
 
     console.log("Master database initialised")
   }
@@ -321,5 +323,6 @@ BangaTracker.applyToClass(MasterDatabase)
 VoiceTracker.applyToClass(MasterDatabase)
 StocksPortfolio.applyToClass(MasterDatabase)
 CalendarDb.applyToClass(MasterDatabase)
+DestinyDb.applyToClass(MasterDatabase)
 
 module.exports = MasterDatabase
